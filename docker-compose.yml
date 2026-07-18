@@ -1,0 +1,14 @@
+services:
+  todo-app:
+    build: .
+    container_name: todo-streamlit
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      # Path INSIDE the container where the JSON file lives
+      - TODO_DATA_DIR=/data
+    volumes:
+      # CHANGE THE LEFT SIDE to wherever your Samba share is mounted on the
+      # Pi's filesystem, e.g. /srv/samba/shared/todo-app or /mnt/samba/todo-app
+      - /path/to/your/samba/share/todo-app:/data
