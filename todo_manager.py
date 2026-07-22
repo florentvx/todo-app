@@ -5,7 +5,7 @@ from pathlib import Path
 
 from todo_cls import Todo, LEGACY_DELIVERY_DATE
 
-DATA_DIR = Path(os.environ.get("TODO_DATA_DIR", "/data"))
+DATA_DIR = Path(os.environ.get("TODO_DATA_DIR", "./data"))
 DATA_FILE = DATA_DIR / "todos.json"
 ARCHIVE_DIR = DATA_DIR / "archive"
 
