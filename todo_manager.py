@@ -1,11 +1,32 @@
 import json
 import os
+from datetime import date
 from pathlib import Path
 
 from todo_cls import Todo, LEGACY_DELIVERY_DATE
 
 DATA_DIR = Path(os.environ.get("TODO_DATA_DIR", "/data"))
 DATA_FILE = DATA_DIR / "todos.json"
+ARCHIVE_DIR = DATA_DIR / "archive"
+
+
+def _ensure_archive_exists():
+    ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _archive_today_if_needed():
+    _ensure_archive_exists()
+    today = date.today()
+    archive_file = ARCHIVE_DIR / f"todo_{today.strftime('%Y%m%d')}.json"
+    if archive_file.exists():
+        return
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            todos = json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError):
+        todos = []
+    with open(archive_file, "w", encoding="utf-8") as f:
+        json.dump(todos, f, indent=2, ensure_ascii=False)
 
 
 def _ensure_store():
@@ -16,6 +37,7 @@ def _ensure_store():
 
 def _read_all():
     _ensure_store()
+    _archive_today_if_needed()
     try:
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             return [Todo.from_dict(t) for t in json.load(f)]

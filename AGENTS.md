@@ -23,6 +23,7 @@ docker-compose.yml     # Mounts host folder as /data for persistent todos.json
 test/
   todos.json           # Sample data for retro-compatibility tests
   test_todos.py        # Schema validation tests
+  test_archive.py      # Archive feature unit tests
 ```
 
 ## Architecture
@@ -37,6 +38,7 @@ test/
   - Atomic writes (temp file + `os.replace`)
   - Data directory configurable via `TODO_DATA_DIR` env var (default: `/data`)
   - All reads/writes go through this module only
+  - **Daily archive**: Automatically creates a backup of `todos.json` in `archive/todo_yyyymmdd.json` before each read (one per day)
 
 ## Data Schema
 
@@ -65,7 +67,9 @@ Todo objects in `todos.json`:
 ## Key Functions (todo_manager.py)
 
 - `_ensure_store()` — Creates data dir/file if missing
-- `_read_all()` — Reads full JSON array from disk, returns `list[Todo]`
+- `_ensure_archive_exists()` — Creates archive directory if missing
+- `_archive_today_if_needed()` — Creates today's archive file if not already present
+- `_read_all()` — Reads full JSON array from disk, returns `list[Todo]` (triggers daily archive)
 - `_write_all(todos)` — Atomic write to disk, accepts `list[Todo]`
 - `list_todos()` — Returns all todos sorted newest-first
 - `add_todo(text, priority, comment, delivery_date)` — Creates new Todo; if delivery_date provided, creates version 2
@@ -89,6 +93,14 @@ python -m pytest test/test_todos.py -v
 - Data integrity (unique IDs, all priorities, both done states)
 - Version validation (v1/v2 constraints, crash tests)
 
+8 archive tests covering:
+- Archive directory creation
+- Archive file creation with correct content
+- Original file preservation
+- No-op when archive already exists
+- Missing/corrupt `todos.json` handling
+- `_read_all` triggering archive
+
 ### Adding New Features
 
 When adding new fields to the todo schema:
@@ -111,4 +123,5 @@ When adding new fields to the todo schema:
 
 - **Run app**: `streamlit run app.py` (or via Docker)
 - **Run tests**: `python -m pytest test/test_todos.py -v`
+- **Run archive tests**: `python -m pytest test/test_archive.py -v`
 - **Install deps**: `pip install -r requirements.txt`
