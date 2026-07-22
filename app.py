@@ -68,25 +68,51 @@ with st.form("add_form", clear_on_submit=True):
 
 st.divider()
 
-# --- Filter ---
-filter_choice = st.radio("Show", ["All", "Active", "Done"], horizontal=True, label_visibility="collapsed")
+# --- Controls ---
+col_filter, col_sort, col_limit = st.columns([1, 1, 1])
 
+with col_filter:
+    filter_choice = st.radio("Show", ["All", "Active", "Done"], horizontal=True, label_visibility="collapsed")
+
+with col_sort:
+    sort_field = st.selectbox("Sort by", ["Delivery date", "Created date", "Priority"], index=0, label_visibility="collapsed")
+
+with col_limit:
+    limit_choice = st.selectbox("Show", ["10", "25", "50", "All"], index=1, label_visibility="collapsed")
+
+# --- Fetch & filter ---
 todos = tm.list_todos()
+
 if filter_choice == "Active":
     todos = [t for t in todos if not t.done]
 elif filter_choice == "Done":
     todos = [t for t in todos if t.done]
 
+# --- Sort ---
+priority_order = {"high": 0, "normal": 1, "low": 2}
+
+if sort_field == "Delivery date":
+    todos = sorted(todos, key=lambda t: t.get_delivery_date())
+elif sort_field == "Created date":
+    todos = sorted(todos, key=lambda t: t.created_at, reverse=True)
+elif sort_field == "Priority":
+    todos = sorted(todos, key=lambda t: priority_order.get(t.priority, 1))
+
+# --- Limit ---
+if limit_choice != "All":
+    todos = todos[:int(limit_choice)]
+
 if not todos:
     st.info("Nothing here yet.")
 
-# --- List (title + priority + status only - click to see/edit details) ---
+# --- List ---
 for t in todos:
     c1, c2 = st.columns([5, 1])
     with c1:
         status_icon = "✅" if t.done else "◻️"
         p_icon = priority_icon.get(t.priority, "🟡")
-        label = f"{p_icon} {status_icon}  {t.text}"
+        delivery = t.get_delivery_date()[:10] if t.delivery_date else ""
+        label = f"{p_icon} {status_icon}  {t.text}  \n*{delivery}*"
         if st.button(label, key=f"open_{t.id}", use_container_width=True):
             st.session_state.open_todo_id = t.id
             st.rerun()
