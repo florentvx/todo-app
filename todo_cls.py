@@ -1,3 +1,4 @@
+from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
@@ -35,15 +36,11 @@ class Todo:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Todo":
+    def from_dict(cls, data: dict) -> Todo:
         filtered = {k: v for k, v in data.items() if k in cls.__dataclass_fields__}
         if "version" not in filtered:
-            raise NotImplementedError()
-            # if "delivery_date" in filtered and filtered["delivery_date"] != LEGACY_DELIVERY_DATE:
-            #     filtered["version"] = 2
-            # else:
-            #     filtered["version"] = 1
-            #     filtered.pop("delivery_date", None)
+            filtered["version"] = 1
+            filtered.pop("delivery_date", None)
         return cls(**filtered)
 
     def get_delivery_date(self):

@@ -16,7 +16,7 @@ import pytest
 SAMPLE_FILE = Path(__file__).parent / "todos.json"
 
 VALID_PRIORITIES = {"high", "normal", "low"}
-REQUIRED_FIELDS = {"id", "text", "comment", "done", "priority", "created_at", "version"}
+REQUIRED_FIELDS = {"id", "text", "comment", "done", "priority", "created_at"}
 
 
 @pytest.fixture
@@ -58,7 +58,7 @@ def test_all_required_fields_present(todos):
 
 def test_no_extra_unknown_fields(todos):
     """Future fields should be added to this set or this test updated."""
-    known = REQUIRED_FIELDS.copy()
+    known = REQUIRED_FIELDS | {"version"}
     v2_known = known | {"delivery_date"}
     for i, todo in enumerate(todos):
         expected = v2_known if todo.get("version") == 2 else known
@@ -107,12 +107,14 @@ def test_created_at_is_iso8601(todos):
 
 def test_version_is_valid(todos):
     for todo in todos:
-        assert todo["version"] in {1, 2}, f"version must be 1 or 2, got {todo['version']}"
+        v = todo.get("version")
+        if v is not None:
+            assert v in {1, 2}, f"version must be 1 or 2, got {v}"
 
 
 def test_v1_todos_have_no_delivery_date(todos):
     for todo in todos:
-        if todo["version"] == 1:
+        if todo.get("version") == 1:
             assert "delivery_date" not in todo, (
                 f"version 1 todo '{todo['text']}' must not have delivery_date"
             )
@@ -120,7 +122,7 @@ def test_v1_todos_have_no_delivery_date(todos):
 
 def test_v2_todos_have_delivery_date(todos):
     for todo in todos:
-        if todo["version"] == 2:
+        if todo.get("version") == 2:
             assert "delivery_date" in todo, (
                 f"version 2 todo '{todo['text']}' must have delivery_date"
             )
@@ -148,7 +150,7 @@ def test_v2_without_delivery_date_crashes():
 
 
 def test_both_versions_in_sample(todos):
-    versions = {t["version"] for t in todos}
+    versions = {t.get("version") for t in todos if t.get("version") is not None}
     assert 1 in versions and 2 in versions, "Sample should include both version 1 and version 2 todos"
 
 

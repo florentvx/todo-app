@@ -46,5 +46,13 @@
     "created_at": "2026-07-10T06:00:00",
     "version": 2,
     "delivery_date": "2026-12-25"
+  },
+  {
+    "id": "bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
+    "text": "Legacy item without version",
+    "comment": "",
+    "done": false,
+    "priority": "normal",
+    "created_at": "2026-07-09T15:30:00"
   }
 ]
