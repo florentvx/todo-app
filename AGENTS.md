@@ -14,16 +14,19 @@ A Python/Streamlit todo application designed to run in Docker on a Raspberry Pi 
 ## Project Structure
 
 ```
-app.py                 # Streamlit UI (add, list, filter, detail dialog, edit, delete)
+app.py                 # Streamlit UI (todo + calendar pages, dialogs, navigation)
 todo_cls.py            # Todo dataclass (model with validation)
 todo_manager.py        # Data access layer (CRUD operations backed by JSON file)
+calendar_cls.py        # CalendarEntry dataclass (model with validation, CALENDAR_COLORS)
+calendar_manager.py    # Calendar data access layer (CRUD operations backed by JSON file)
 requirements.txt       # Python dependencies (streamlit, pytest)
 Dockerfile             # Python 3.11-slim image, runs Streamlit on port 8501
 docker-compose.yml     # Mounts host folder as /data for persistent todos.json
 test/
   todos.json           # Sample data for retro-compatibility tests
-  test_todos.py        # Schema validation tests
-  test_archive.py      # Archive feature unit tests
+  test_todos.py        # Schema validation tests (19 tests)
+  test_archive.py      # Archive feature unit tests (8 tests)
+  test_calendar.py     # Calendar model + manager unit tests (24 tests)
 ```
 
 ## Architecture
@@ -33,12 +36,19 @@ test/
   - `from_dict(data)` — Deserializes from a dict; raises `NotImplementedError` if `version` is missing
   - `get_delivery_date()` — Returns `delivery_date` or `LEGACY_DELIVERY_DATE` fallback for v1 todos
 - **UI Layer** (`app.py`): Streamlit web application handling user interactions
-- **Data Layer** (`todo_manager.py`): Pure data-access module with CRUD operations
+  - **Todo page**: Add, list, filter, sort, detail dialog (with notes + delivery date), delete
+  - **Calendar page**: Month grid with navigation, click any day to add/edit entry via dialog
+  - Uses `st.Page` + `st.navigation` for multi-page layout
+  - Uses `@st.dialog` for edit modals
+- **Data Layer — Todos** (`todo_manager.py`): Pure data-access module with CRUD operations
   - Reads/writes single JSON file (`todos.json`)
   - Atomic writes (temp file + `os.replace`)
   - Data directory configurable via `TODO_DATA_DIR` env var (default: `/data`)
   - All reads/writes go through this module only
   - **Daily archive**: Automatically creates a backup of `todos.json` in `archive/todo_yyyymmdd.json` before each read (one per day)
+- **Data Layer — Calendar** (`calendar_manager.py`): Pure data-access module for calendar entries
+  - Reads/writes single JSON file (`calendar_entries.json`)
+  - Same data directory as todos
 
 ## Data Schema
 
@@ -64,6 +74,20 @@ Todo objects in `todos.json`:
 - All todos created from the app are version 2 (with delivery_date).
 - `update_delivery_date` auto-sets version to 2 when a non-legacy date is provided.
 
+## Calendar Schema
+
+CalendarEntry objects in `calendar_entries.json`:
+
+| Field   | Type   | Values/Format                          |
+|---------|--------|----------------------------------------|
+| `date`  | string | ISO 8601 date (`2026-07-20`)          |
+| `title` | string | Entry title                            |
+| `notes` | string | Optional notes (default: `""`)         |
+| `color` | string | One of `CALENDAR_COLORS` keys          |
+| `id`    | string | UUID v4                                |
+
+`CALENDAR_COLORS`: `default` (#ffffff), `blue` (#228be6), `green` (#40c057), `red` (#fa5252), `yellow` (#fcc419), `purple` (#7950f2), `orange` (#fd7e14)
+
 ## Key Functions (todo_manager.py)
 
 - `_ensure_store()` — Creates data dir/file if missing
@@ -77,6 +101,16 @@ Todo objects in `todos.json`:
 - `update_comment(todo_id, comment)` — Updates comment field
 - `update_delivery_date(todo_id, delivery_date)` — Updates delivery date, auto-sets version to 2
 - `delete_todo(todo_id)` — Removes todo by ID
+
+## Key Functions (calendar_manager.py)
+
+- `_ensure_store()` — Creates data dir/file if missing
+- `_read_all()` — Reads full JSON array from disk, returns `list[CalendarEntry]`
+- `_write_all(entries)` — Atomic write to disk
+- `list_entries()` — Returns all entries
+- `get_entry(date_str)` — Returns entry for a given date or None
+- `save_entry(date_str, title, notes, color)` — Creates or updates entry for a date
+- `delete_entry(date_str)` — Removes entry by date
 
 ## Testing
 
@@ -101,6 +135,11 @@ python -m pytest test/test_todos.py -v
 - Missing/corrupt `todos.json` handling
 - `_read_all` triggering archive
 
+24 calendar tests covering:
+- CalendarEntry model defaults, to_dict, from_dict, roundtrip, valid UUID
+- CALENDAR_COLORS key/hex validation
+- calendar_manager: store creation, list, get, save (create/update), delete, all colors, independence, overwrite, corrupt file handling, auto-creation on write
+
 ### Adding New Features
 
 When adding new fields to the todo schema:
@@ -121,7 +160,13 @@ When adding new fields to the todo schema:
 
 ## Commands
 
+- **Virtual env**: `C:/workspace/repos/todo-app/.venv/Scripts/python.exe`
 - **Run app**: `streamlit run app.py` (or via Docker)
-- **Run tests**: `python -m pytest test/test_todos.py -v`
+- **Run tests**: `python -m pytest test/test_todos.py -v` (uses .venv)
 - **Run archive tests**: `python -m pytest test/test_archive.py -v`
+- **Run all tests**: `python -m pytest test/ -v`
 - **Install deps**: `pip install -r requirements.txt`
+
+### Using .venv
+
+Always use the venv Python at `C:/workspace/repos/todo-app/.venv/Scripts/python.exe` or activate via `source .venv/Scripts/activate`. Tests and `streamlit run` commands use the venv automatically when run from the project root.
