@@ -232,12 +232,14 @@ def calendar_page():
             is_today = date_str == today_str
             border = "2px solid #228be6" if is_today else "1px solid #dee2e6"
             title = entry.title if entry and entry.title else ""
+            notes = entry.notes if entry and entry.notes else ""
+            tooltip = notes if notes else title
 
             with cols[i]:
                 st.markdown(
                     f'<div style="display:flex;flex-direction:column;color:{tc};background:{bg};'
                     f'border:{border};border-radius:6px;padding:8px;min-height:90px;'
-                    f'box-sizing:border-box;">'
+                    f'box-sizing:border-box;" title="{tooltip}">'
                     f'<div style="font-weight:bold;font-size:18px;line-height:1.3;">{day_num}</div>'
                     f'<div style="flex:1;display:flex;align-items:center;justify-content:center;'
                     f'font-size:13px;text-align:center;overflow:hidden;">{title}</div>'
