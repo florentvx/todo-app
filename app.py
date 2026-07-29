@@ -51,6 +51,7 @@ def show_todo_detail(todo_id: str):
 def show_calendar_edit_dialog(date_str: str):
     entry = cm.get_entry(date_str)
 
+    st.subheader(date_str)
     title = st.text_input("Title", value=entry.title if entry else "", placeholder="Enter title...")
     notes = st.text_area("Notes", value=entry.notes if entry else "", placeholder="Enter notes...", height=150)
 
@@ -61,7 +62,7 @@ def show_calendar_edit_dialog(date_str: str):
                          format_func=lambda c: c.capitalize())
 
     st.markdown(
-        f"<div style='background:{CALENDAR_COLORS[color]};height:20px;border-radius:6px;'></div>",
+        f"<div style='background:{CALENDAR_COLORS[color]};height:40px;border-radius:6px;margin-bottom:12px;'></div>",
         unsafe_allow_html=True,
     )
 
@@ -169,6 +170,7 @@ def calendar_page():
     c1, c2, c3, c4 = st.columns([1, 3, 1, 1])
     with c1:
         if st.button("◀", use_container_width=True):
+            st.session_state.edit_date = None
             new_month = month - 1
             new_year = year
             if new_month == 0:
@@ -181,6 +183,7 @@ def calendar_page():
         st.header(f"{calendar.month_name[month]} {year}", anchor=False)
     with c3:
         if st.button("▶", use_container_width=True):
+            st.session_state.edit_date = None
             new_month = month + 1
             new_year = year
             if new_month == 13:
@@ -191,6 +194,7 @@ def calendar_page():
             st.rerun()
     with c4:
         if st.button("Today", use_container_width=True):
+            st.session_state.edit_date = None
             today = date.today()
             st.session_state.cal_year = today.year
             st.session_state.cal_month = today.month
@@ -222,7 +226,7 @@ def calendar_page():
                 bg = CALENDAR_COLORS.get(entry.color, "#ffffff")
                 tc = "#ffffff" if entry.color not in ("default", "yellow") else "#212529"
             else:
-                bg = "#ffffff"
+                bg = CALENDAR_COLORS["default"]
                 tc = "#212529"
 
             is_today = date_str == today_str
