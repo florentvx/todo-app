@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py todo_manager.py ./
+COPY app.py todo_manager.py todo_cls.py calendar_cls.py calendar_manager.py ./
 
 EXPOSE 8501
 
