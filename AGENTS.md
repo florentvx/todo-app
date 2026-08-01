@@ -38,6 +38,9 @@ test/
 - **UI Layer** (`app.py`): Streamlit web application handling user interactions
   - **Todo page**: Add, list, filter, sort, detail dialog (with notes + delivery date), delete
   - **Calendar page**: Month grid with navigation, click any day to add/edit entry via dialog
+    - Day cells are hand-built raw HTML via `st.markdown(..., unsafe_allow_html=True)`
+    - Title/notes are `html.escape()`d and newlines encoded as `&#10;` (tooltip) / `<br>` (cell) before insertion — otherwise CommonMark terminates the raw HTML block at a blank line and the rest of the markup leaks into the grid as visible text
+    - Cells with notes but no title show a small black circle (`#212529`, 8px) at the bottom-right as an indicator; the tooltip still shows the notes
   - Uses `st.Page` + `st.navigation` for multi-page layout
   - Uses `@st.dialog` for edit modals
 - **Data Layer — Todos** (`todo_manager.py`): Pure data-access module with CRUD operations
