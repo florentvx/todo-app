@@ -188,7 +188,11 @@ def calendar_page():
             st.session_state.cal_year = new_year
             st.rerun()
     with c2:
-        st.header(f"{calendar.month_name[month]} {year}", anchor=False)
+        st.header(
+            f"{calendar.month_name[month]} {year}",
+            anchor=False,
+            text_alignment="center",
+        )
     with c3:
         if st.button("▶", use_container_width=True):
             st.session_state.edit_date = None
