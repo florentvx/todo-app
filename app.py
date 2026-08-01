@@ -34,7 +34,7 @@ def show_todo_detail(todo_id: str):
     current_delivery = date.fromisoformat(t.get_delivery_date())
     delivery = st.date_input("Delivery date", value=current_delivery, min_value="2000-01-01")
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("Save", use_container_width=True, type="primary"):
             tm.set_done(todo_id, done)
@@ -43,8 +43,32 @@ def show_todo_detail(todo_id: str):
             st.session_state.open_todo_id = None
             st.rerun()
     with col2:
+        if st.button("Delete", use_container_width=True):
+            tm.delete_todo(todo_id)
+            st.session_state.open_todo_id = None
+            st.rerun()
+    with col3:
         if st.button("Close", use_container_width=True):
             st.session_state.open_todo_id = None
+            st.rerun()
+
+
+@st.dialog("New todo", width="large")
+def show_add_todo_dialog():
+    text = st.text_input("What needs doing?")
+    priority = st.selectbox("Priority", ["normal", "high", "low"])
+    comment = st.text_area("Notes", placeholder="Optional notes / details (as long as you like)...", height=100)
+    delivery = st.date_input("Delivery date", value=date.today())
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("Add", type="primary", use_container_width=True):
+            if text.strip():
+                tm.add_todo(text.strip(), priority, comment, delivery_date=delivery.isoformat())
+                st.session_state.show_add = False
+                st.rerun()
+    with c2:
+        if st.button("Close", use_container_width=True):
+            st.session_state.show_add = False
             st.rerun()
 
 
@@ -84,25 +108,8 @@ def show_calendar_edit_dialog(date_str: str):
 def todo_page():
     st.title("Todo List")
 
-    with st.form("add_form", clear_on_submit=True):
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            new_text = st.text_input("New todo", label_visibility="collapsed", placeholder="What needs doing?")
-        with col2:
-            priority = st.selectbox("Priority", ["normal", "high", "low"], label_visibility="collapsed")
-        new_comment = st.text_area(
-            "Notes",
-            label_visibility="collapsed",
-            placeholder="Optional notes / details (as long as you like)...",
-            height=100,
-        )
-        delivery = st.date_input("Delivery date", value=date.today())
-        submitted = st.form_submit_button("Add", use_container_width=True)
-        if submitted and new_text.strip():
-            tm.add_todo(new_text, priority, new_comment, delivery_date=delivery.isoformat())
-            st.rerun()
-
-    st.divider()
+    if st.button("New todo", type="primary"):
+        st.session_state.show_add = True
 
     col_filter, col_sort, col_limit = st.columns([1, 1, 1])
 
@@ -137,20 +144,20 @@ def todo_page():
     if not todos:
         st.info("Nothing here yet.")
 
-    for t in todos:
-        c1, c2 = st.columns([5, 1])
-        with c1:
-            status_icon = "✅" if t.done else "◻️"
-            p_icon = priority_icon.get(t.priority, "🟡")
-            delivery = t.get_delivery_date()[:10] if t.delivery_date else ""
-            label = f"{p_icon} {status_icon}  {t.text}  \n*{delivery}*"
-            if st.button(label, key=f"open_{t.id}", use_container_width=True):
-                st.session_state.open_todo_id = t.id
-                st.rerun()
-        with c2:
-            if st.button("Delete", key=f"del_{t.id}"):
-                tm.delete_todo(t.id)
-                st.rerun()
+    num_cols = 3
+    for row_start in range(0, len(todos), num_cols):
+        cols = st.columns(num_cols)
+        for i, t in enumerate(todos[row_start:row_start + num_cols]):
+            with cols[i]:
+                status_icon = "✅" if t.done else "◻️"
+                p_icon = priority_icon.get(t.priority, "🟡")
+                label = f"{p_icon} {status_icon}  {t.text}  \n*{t.get_delivery_date()[:10]}*"
+                if st.button(label, key=f"open_{t.id}", use_container_width=True):
+                    st.session_state.open_todo_id = t.id
+                    st.rerun()
+
+    if st.session_state.get("show_add"):
+        show_add_todo_dialog()
 
     if st.session_state.get("open_todo_id"):
         show_todo_detail(st.session_state.open_todo_id)
