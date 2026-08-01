@@ -10,6 +10,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py todo_manager.py todo_cls.py calendar_cls.py calendar_manager.py ./
+COPY .streamlit/ .streamlit/
 
 EXPOSE 8501
 

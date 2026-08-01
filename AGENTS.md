@@ -20,6 +20,7 @@ todo_manager.py        # Data access layer (CRUD operations backed by JSON file)
 calendar_cls.py        # CalendarEntry dataclass (model with validation, CALENDAR_COLORS)
 calendar_manager.py    # Calendar data access layer (CRUD operations backed by JSON file)
 requirements.txt       # Python dependencies (streamlit, pytest)
+.streamlit/config.toml # Disables Streamlit fast reruns (prevents stale widgets on slow hosts)
 Dockerfile             # Python 3.11-slim image, runs Streamlit on port 8501
 docker-compose.yml     # Mounts host folder as /data for persistent todos.json
 test/

@@ -1,0 +1,6 @@
+# Disable fast reruns so every script run completes before the next starts.
+# With fast reruns enabled on slow hardware (e.g. the Raspberry Pi), an
+# interaction that lands while a rerun is still processing stops the current
+# run before its stale-element cleanup runs, leaving old widgets on the page.
+[runner]
+fastReruns = false
