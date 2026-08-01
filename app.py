@@ -2,6 +2,7 @@ import streamlit as st
 
 from datetime import date
 import calendar
+import html
 import todo_manager as tm
 from todo_cls import Todo
 import calendar_manager as cm
@@ -234,15 +235,26 @@ def calendar_page():
             title = entry.title if entry and entry.title else ""
             notes = entry.notes if entry and entry.notes else ""
             tooltip = notes if notes else title
+            esc_title = html.escape(title).replace("\n", "<br>")
+            esc_tooltip = html.escape(tooltip).replace("\n", "&#10;")
+            notes_badge = ""
+            cell_position = ""
+            if notes and not title:
+                cell_position = "position:relative;"
+                notes_badge = (
+                    '<div style="position:absolute;right:6px;bottom:6px;width:8px;height:8px;'
+                    'border-radius:50%;background:#212529;"></div>'
+                )
 
             with cols[i]:
                 st.markdown(
-                    f'<div style="display:flex;flex-direction:column;color:{tc};background:{bg};'
+                    f'<div style="display:flex;flex-direction:column;{cell_position}color:{tc};background:{bg};'
                     f'border:{border};border-radius:6px;padding:8px;min-height:90px;'
-                    f'box-sizing:border-box;" title="{tooltip}">'
+                    f'box-sizing:border-box;" title="{esc_tooltip}">'
                     f'<div style="font-weight:bold;font-size:18px;line-height:1.3;">{day_num}</div>'
                     f'<div style="flex:1;display:flex;align-items:center;justify-content:center;'
-                    f'font-size:13px;text-align:center;overflow:hidden;">{title}</div>'
+                    f'font-size:13px;text-align:center;overflow:hidden;">{esc_title}</div>'
+                    f'{notes_badge}'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
