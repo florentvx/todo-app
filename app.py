@@ -156,12 +156,6 @@ def todo_page():
                     st.session_state.open_todo_id = t.id
                     st.rerun()
 
-    if st.session_state.get("show_add"):
-        show_add_todo_dialog()
-
-    if st.session_state.get("open_todo_id"):
-        show_todo_detail(st.session_state.open_todo_id)
-
 
 def calendar_page():
     st.title("Calendar")
@@ -273,11 +267,24 @@ def calendar_page():
                     st.session_state.edit_date = date_str
                     st.rerun()
 
-    if st.session_state.get("edit_date"):
-        show_calendar_edit_dialog(st.session_state.edit_date)
 
+page_choice = st.sidebar.radio(
+    "Navigation",
+    ["✅ Todo List", "📅 Calendar"],
+    label_visibility="collapsed",
+)
 
-todo_pg = st.Page(todo_page, title="Todo List", icon="✅")
-cal_pg = st.Page(calendar_page, title="Calendar", icon="📅")
-pg = st.navigation([todo_pg, cal_pg])
-pg.run()
+root = st.empty()
+root.empty()
+with root.container():
+    if page_choice == "✅ Todo List":
+        todo_page()
+    else:
+        calendar_page()
+
+if st.session_state.get("show_add"):
+    show_add_todo_dialog()
+if st.session_state.get("open_todo_id"):
+    show_todo_detail(st.session_state.open_todo_id)
+if st.session_state.get("edit_date"):
+    show_calendar_edit_dialog(st.session_state.edit_date)

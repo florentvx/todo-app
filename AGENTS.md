@@ -42,7 +42,9 @@ test/
     - Day cells are hand-built raw HTML via `st.markdown(..., unsafe_allow_html=True)`
     - Title/notes are `html.escape()`d and newlines encoded as `&#10;` (tooltip) / `<br>` (cell) before insertion — otherwise CommonMark terminates the raw HTML block at a blank line and the rest of the markup leaks into the grid as visible text
     - Cells with notes but no title show a small black circle (`#212529`, 8px) at the bottom-right as an indicator; the tooltip still shows the notes
-  - Uses `st.Page` + `st.navigation` for multi-page layout
+  - Manual tab navigation via a `st.sidebar.radio` (no `st.navigation`/`st.Page`)
+  - All page content renders inside a single module-level `st.empty()` root container that is explicitly cleared (`root.empty()`) at the start of every rerun, then rebuilt — this forces stale widgets/elements to be deleted manually instead of relying on the frontend's (unreliable on slow hosts like the Pi) cleanup deltas
+  - Dialog invocations live at module level, after the root container block
   - Uses `@st.dialog` for edit modals
 - **Data Layer — Todos** (`todo_manager.py`): Pure data-access module with CRUD operations
   - Reads/writes single JSON file (`todos.json`)
